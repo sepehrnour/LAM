@@ -44,7 +44,7 @@ Architecture validated by 3-specialist team (FLAME/3DGS, Muse integration, syste
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Build AU→FLAME weight matrix from existing arkit_to_flame.json, construct 34 unilateral AU deltas from shapedirs_up expression portion
+- [x] 01-01: Build AU→FLAME weight matrix from existing arkit_to_flame.json, construct 34 unilateral AU deltas from shapedirs_up expression portion
 - [ ] 01-02: Pre-multiply 34 AU deltas → 52 ARKit deltas, serialize as fp16 binary (Gaussian-major vec4 layout), generate au_manifest.json with bone_bindings
 - [ ] 01-03: Visual validation — render each ARKit delta individually, compare against expected deformation, verify linear composition of multiple deltas
 
@@ -72,6 +72,6 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. AU Deformation Basis + ARKit Delta Export | 0/3 | Not started | - |
+| 1. AU Deformation Basis + ARKit Delta Export | 1/3 | In progress | 01-01 |
 | 2. Export Bundle Integration | 0/2 | Not started | - |
 | 3. End-to-End Validation | 0/2 | Not started | - |
