@@ -1,12 +1,40 @@
-wheels
+# Python
 __pycache__/
+*.pyc
+*.egg-info/
+dist/
 build/
 *.so
-assets/sample_input/
-assets/sample_motion/
-configs/vhap_tracking/
+
+# Environments
+lam_env/
+.venv/
+venv/
+
+# Large assets (downloaded on demand)
+tmp/
+thirdparties/
+output/
 exps/
+dumps/
+runtime_data/
+cuda_shim/
+artifacts/
+
+# Model files
 pretrain_model/
 pretrained_models/
 model_zoo/
 tracking_output/
+wheels/
+
+# Sample data
+assets/sample_input/
+assets/sample_motion/
+
+# VHAP tracking configs
+configs/vhap_tracking/
+
+# OS
+.DS_Store
+._*

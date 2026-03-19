@@ -211,10 +211,12 @@ def demo_lam(flametracking, lam, cfg):
 
     # @spaces.GPU(duration=80)
     def core_fn(image_path: str, video_params, working_dir, enable_oac_file):
+        import pathlib
+        output_zip_path = ''
         image_raw = os.path.join(working_dir.name, "raw.png")
         with Image.open(image_path).convert('RGB') as img:
             img.save(image_raw)
-        
+
         base_vid = os.path.basename(video_params).split(".")[0]
         flame_params_dir = os.path.join("./assets/sample_motion/export", base_vid, "flame_param")
         base_iid = os.path.basename(image_path).split('.')[0]
@@ -243,7 +245,7 @@ def demo_lam(flametracking, lam, cfg):
         dump_tmp_dir = dump_image_dir
 
         if os.path.exists(dump_video_path):
-            return dump_image_path, dump_video_path
+            return dump_image_path, dump_video_path, ''
 
         motion_img_need_mask = cfg.get("motion_img_need_mask", False)  # False
         vis_motion = cfg.get("vis_motion", False)  # False
@@ -275,11 +277,11 @@ def demo_lam(flametracking, lam, cfg):
         Image.fromarray(vis_ref_img).save(save_ref_img_path)
 
         # prepare motion seq
-        src = Path(image_path).parent.parent.name
-        driven = Path(motion_seqs_dir).parent.name
+        src = pathlib.Path(image_path).parent.parent.name
+        driven = pathlib.Path(motion_seqs_dir).parent.name
         src_driven = [src, driven]
         motion_seq = prepare_motion_seqs(motion_seqs_dir, None, save_root=dump_tmp_dir, fps=render_fps,
-                                            bg_color=1., aspect_standard=aspect_standard, enlarge_ratio=[1.0, 1,0],
+                                            bg_color=1., aspect_standard=aspect_standard, enlarge_ratio=[1.0, 1.0],
                                             render_image_res=render_size,  multiply=16, 
                                             need_mask=motion_img_need_mask, vis_motion=vis_motion, 
                                             shape_param=shape_param, test_sample=False, cross_id=False, src_driven=src_driven)
@@ -308,7 +310,6 @@ def demo_lam(flametracking, lam, cfg):
         if enable_oac_file:
             try:
                 from tools.generateARKITGLBWithBlender import generate_glb
-                from pathlib import Path
                 import shutil
                 import patoolib
 
@@ -316,10 +317,10 @@ def demo_lam(flametracking, lam, cfg):
                 saved_head_path = lam.renderer.flame_model.save_shaped_mesh(shape_param.unsqueeze(0).cuda(), fd=oac_dir)
                 res['cano_gs_lst'][0].save_ply(os.path.join(oac_dir, "offset.ply"), rgb2sh=False, offset2xyz=True)
                 generate_glb(
-                    input_mesh=Path(saved_head_path),
-                    template_fbx=Path("./assets/sample_oac/template_file.fbx"),
-                    output_glb=Path(os.path.join(oac_dir, "skin.glb")),
-                    blender_exec=Path(cfg.blender_path)
+                    input_mesh=pathlib.Path(saved_head_path),
+                    template_fbx=pathlib.Path("./assets/sample_oac/template_file.fbx"),
+                    output_glb=pathlib.Path(os.path.join(oac_dir, "skin.glb")),
+                    blender_exec=pathlib.Path(cfg.blender_path)
                 )
                 shutil.copy(
                     src='./assets/sample_oac/animation.glb',

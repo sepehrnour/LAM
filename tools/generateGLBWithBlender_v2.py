@@ -36,8 +36,11 @@ def create_armature_from_bone_tree(obj, bone_tree_path):
             # recursive_create_bones(new_bone, bone_list=bone_data.get('children', []))
 
     # 从根骨骼开始构建
-    # print(bones_data.get('children', []))
-    recursive_create_bones(None, [bones_data])  
+    recursive_create_bones(None, [bones_data])
+
+    # Remove the default Bone created by armature_add
+    if 'Bone' in edit_bones:
+        edit_bones.remove(edit_bones['Bone'])
 
     # 设置骨骼与模型绑定
     obj.parent = armature
@@ -127,6 +130,47 @@ def add_shape_keys(base_obj, bs_obj_files):
         # 清理临时对象
         bpy.data.objects.remove(imported_obj)
 
+def apply_vertex_colors(obj, colors_file):
+    """Apply vertex colors from JSON [N, 3] array."""
+    if not os.path.exists(colors_file):
+        print(f"Vertex colors file not found: {colors_file}")
+        return
+    with open(colors_file, 'r') as f:
+        colors = json.load(f)
+
+    # Use CORNER domain for glTF compatibility (per-loop-vertex colors)
+    color_layer = obj.data.color_attributes.new(
+        name='Col', type='FLOAT_COLOR', domain='CORNER'
+    )
+
+    # Build vertex-index-to-color lookup, then assign per loop (corner)
+    mesh = obj.data
+    for poly in mesh.polygons:
+        for loop_idx in poly.loop_indices:
+            vi = mesh.loops[loop_idx].vertex_index
+            if vi < len(colors):
+                color_layer.data[loop_idx].color = (*colors[vi], 1.0)
+
+    # Set as active color attribute for export
+    obj.data.color_attributes.active_color = color_layer
+    idx = obj.data.color_attributes.find('Col')
+    if idx >= 0:
+        obj.data.color_attributes.render_color_index = idx
+        obj.data.color_attributes.active_color_index = idx
+
+    # Create material that uses vertex colors (required for reliable glTF export)
+    mat = bpy.data.materials.new(name="VertexColorMat")
+    mat.use_nodes = True
+    tree = mat.node_tree
+    bsdf = tree.nodes["Principled BSDF"]
+    color_node = tree.nodes.new('ShaderNodeVertexColor')
+    color_node.layer_name = 'Col'
+    tree.links.new(color_node.outputs['Color'], bsdf.inputs['Base Color'])
+    obj.data.materials.append(mat)
+
+    print(f"Applied vertex colors from {colors_file} ({len(colors)} colors, {len(mesh.loops)} corners)")
+
+
 def layout_bones_pose(armature, pose_config):
     """设置骨骼的初始姿势（可选）"""
     if pose_config:
@@ -172,11 +216,15 @@ def export_as_glb(obj, output_path, output_vertex_order_file):
     print(f"Exported vertex order to: {output_vertex_order_file}")
     
     # 执行导出
-    bpy.ops.export_scene.gltf(filepath=output_path, 
+    bpy.ops.export_scene.gltf(filepath=output_path,
                             export_format='GLB',
                             export_skins=True,
-                            export_texcoords=False,         # 不导出 UV 数据
-                            export_normals=False            # 不导出法线数据
+                            export_vertex_color='ACTIVE',
+                            export_active_vertex_color_when_no_material=True,
+                            export_texcoords=False,
+                            export_normals=True,
+                            export_morph_normal=False,
+                            export_morph_tangent=False,
                             )
     print(f"导出成功：{output_path}")
 
@@ -187,9 +235,13 @@ def main():
     weight_data_path = "runtime_data/lbs_weight_20k.json"  # 权重数据
     output_glb_path = "runtime_data/skin.glb"
     output_vertex_order_file = "runtime_data/vertex_order.json"  # 输出顶点顺序文件
+    vertex_colors_path = "runtime_data/vertex_colors.json"
 
     # 清空场景
     bpy.ops.wm.read_homefile(use_empty=True)
+    # Ensure scene is truly empty (Blender 5.0 may leave residual objects)
+    for obj in list(bpy.data.objects):
+        bpy.data.objects.remove(obj, do_unlink=True)
 
     # 导入基础模型
     import_obj(base_model_path)
@@ -203,6 +255,9 @@ def main():
 
     # 应用顶点权重
     apply_vertex_weights(base_obj, weight_data_path)
+
+    # 应用顶点颜色
+    apply_vertex_colors(base_obj, vertex_colors_path)
 
     # 加载所有Shape Keys（表情）
     expression_files = [

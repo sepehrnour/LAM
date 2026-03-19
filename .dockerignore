@@ -1,0 +1,49 @@
+# Virtual environments
+lam_env/
+.venv/
+venv/
+
+# Model weights (mount at runtime via volume)
+model_zoo/
+pretrain_model/
+pretrained_models/
+
+# Large binaries
+thirdparties/
+
+# Dev artifacts
+output/
+exps/
+dumps/
+tmp/
+artifacts/
+runtime_data/
+tracking_output/
+cuda_shim/
+
+# Git
+.git/
+
+# OS
+.DS_Store
+._*
+
+# Build cache
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+wheels/
+
+# Sample data (not needed in prod)
+assets/sample_input/
+assets/sample_motion/
+
+# Configs not needed
+configs/vhap_tracking/
+
+# Dev-only scripts
+*.bat
+*.md
+*.ipynb

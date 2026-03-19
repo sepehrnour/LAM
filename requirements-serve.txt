@@ -1,0 +1,17 @@
+# Core inference deps (torch installed separately from CUDA index)
+fastapi
+uvicorn[standard]
+python-multipart
+omegaconf
+numpy==1.23.0
+Pillow
+opencv-python-headless
+trimesh
+plyfile
+safetensors
+einops
+diffusers
+loguru
+tyro
+Cython
+ninja
